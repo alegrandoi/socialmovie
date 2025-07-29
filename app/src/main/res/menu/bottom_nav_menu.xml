@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/vector_new"
+        android:title="@string/title_new" />
+
+    <item
+        android:id="@+id/navigation_dashboard"
+        android:icon="@drawable/vector_buscar"
+        android:title="@string/title_buscar" />
+
+    <item
+        android:id="@+id/navigation_notifications"
+        android:icon="@drawable/vector_perfil"
+        android:title="@string/title_perfil" />
+
+
+</menu>
