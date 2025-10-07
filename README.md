@@ -29,10 +29,13 @@ Esta app utiliza servicios externos como **Firebase**, **TMDB (The Movie Databas
 
 ### 1️⃣ Firebase
 
+> ⚠️ **Importante:** el archivo `app/google-services.json` **no debe versionarse**.
+> Está en `.gitignore` y se inyecta automáticamente mediante el secreto `GOOGLE_SERVICES_JSON` en CI.
+
 1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com/)
 2. Habilita los servicios requeridos (Auth, Firestore, etc.)
 3. Descarga el archivo `google-services.json`
-4. Colócalo en el directorio `app/` del proyecto
+4. Colócalo en el directorio `app/` del proyecto (solo para desarrollo local)
 
 ### 2️⃣ TMDB y otras claves API
 
