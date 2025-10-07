@@ -29,12 +29,30 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            // Temporarily disabled for dev environment without full SDK
+            // TODO: Re-enable for production builds with minifyEnabled true
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Disable debug features in release
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            
+            // Enable PNG crunching
+            crunchPngs true
         }
         debug {
             minifyEnabled false
+            debuggable true
+            
+            // Enable test coverage
+            testCoverageEnabled true
+            
+            // Application ID suffix for debug
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
     compileOptions {
