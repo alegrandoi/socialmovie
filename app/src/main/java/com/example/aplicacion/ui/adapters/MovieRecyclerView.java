@@ -7,23 +7,32 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.aplicacion.R;
 import com.example.aplicacion.ui.models.MovieModel;
-import com.example.aplicacion.ui.utils.Credentials;
 
 import java.util.List;
 
-public class MovieRecyclerView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+/**
+ * Adapter for displaying movies in RecyclerView.
+ * Extends BaseMovieAdapter to eliminate code duplication.
+ * Supports both popular movies and search results display modes.
+ */
+public class MovieRecyclerView extends BaseMovieAdapter {
 
     private List<MovieModel> mMovies;
-    private OnMovieListener onMovieListener;
-
-    private static final int DISPLAY_POP=1;
-    private static final int DISPLAY_SEARCH=2;
 
     public MovieRecyclerView(OnMovieListener onMovieListener) {
-        this.onMovieListener = onMovieListener;
+        super(onMovieListener);
+    }
+
+    @Override
+    protected List<MovieModel> getMovieList() {
+        return mMovies;
+    }
+
+    @Override
+    protected void setMovieList(List<MovieModel> movies) {
+        this.mMovies = movies;
     }
 
     @NonNull
@@ -44,63 +53,28 @@ public class MovieRecyclerView extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int i) {
-
         int itemViewType = getItemViewType(i);
-        if(itemViewType==DISPLAY_SEARCH){
-            //Nuestro rating es sobre 5 y el de la api sobre 10 por eso el /2
-            ((MovieViewHolder)holder).ratingBar.setRating((mMovies.get(i).getVote_average())/2);
-            //ImageView usando Glide Library
-            Glide.with(holder.itemView.getContext())
-                    .load("https://image.tmdb.org/t/p/w500/"
-                            +mMovies.get(i).getPoster_path())
-                    .into((((MovieViewHolder)holder).imageView));
-        }else{
-            //Nuestro rating es sobre 5 y el de la api sobre 10 por eso el /2
-            ((Popular_View_Holder)holder).ratingBar22.setRating((mMovies.get(i).getVote_average())/2);
-            //ImageView usando Glide Library
-            Glide.with(holder.itemView.getContext())
-                    .load("https://image.tmdb.org/t/p/w500/"
-                            +mMovies.get(i).getPoster_path())
-                    .into((((Popular_View_Holder)holder).imageView22));
+        MovieModel movie = mMovies.get(i);
+        
+        if (itemViewType == DISPLAY_SEARCH) {
+            // Search view binding
+            MovieViewHolder searchHolder = (MovieViewHolder) holder;
+            searchHolder.ratingBar.setRating(convertRating(movie.getVote_average()));
+            loadMovieImage(holder, movie.getPoster_path(), searchHolder.imageView);
+        } else {
+            // Popular view binding
+            Popular_View_Holder popularHolder = (Popular_View_Holder) holder;
+            popularHolder.ratingBar22.setRating(convertRating(movie.getVote_average()));
+            loadMovieImage(holder, movie.getPoster_path(), popularHolder.imageView22);
         }
-
-
-
-        // */
     }
 
-    @Override
-    public int getItemCount() {
-        if(mMovies != null){
-            return mMovies.size();
-        }
-       return 0;
-    }
-
-    public void setmMovies(List<MovieModel> mMovies) {
-        this.mMovies = mMovies;
-        notifyDataSetChanged();
-    }
-
-
-
-    //obtener id de la pelicula pulsada
-
-    public MovieModel getSelectedMovie(int position){
-        if( mMovies != null){
-            if(mMovies.size() > 0){
-                return mMovies.get(position);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if(Credentials.POPULAR){
-            return DISPLAY_POP;
-        }else{
-            return DISPLAY_SEARCH;
-        }
+    /**
+     * Updates the movie list and notifies observers.
+     * @param movies New list of movies to display
+     */
+    public void setmMovies(List<MovieModel> movies) {
+        setMovieList(movies);
+        notifyMoviesChanged();
     }
 }

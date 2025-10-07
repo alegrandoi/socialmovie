@@ -1,240 +1,257 @@
-package com.example.aplicacion.ui.request;package com.example.aplicacion.ui.request;
+package com.example.aplicacion.ui.request;
 
+import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
-import android.util.Log;import android.util.Log;
+import com.example.aplicacion.AppExecutors;
+import com.example.aplicacion.ui.models.MovieModel;
+import com.example.aplicacion.ui.response.MovieSearchResponse;
+import com.example.aplicacion.ui.utils.Credentials;
 
-import androidx.lifecycle.LiveData;import androidx.lifecycle.LiveData;
-
-import androidx.lifecycle.MutableLiveData;import com.example.aplicacion.ui.models.MovieModel;
-
-import com.example.aplicacion.AppExecutors;import com.example.aplicacion.util.AppExecutors;
-
-import com.example.aplicacion.ui.models.MovieModel;import java.util.List;
-
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
-import java.util.concurrent.Future;/**
+import retrofit2.Call;
+import retrofit2.Response;
 
-import java.util.concurrent.TimeUnit; * Refactored MovieApiClient with separated concerns.
+public class MovieApiClient {
 
- * Delegates search and popular movie operations to specialized handlers.
+    // Esto es el livedata
+    private MutableLiveData<List<MovieModel>> mMovies;// Clase necesaria para el viewmodel
+    private static MovieApiClient instancia;
+    // Cremos un "Runable" GLOBAL.
+    private RetrieveMoviesRunnable retrieveMoviesRunnable;
 
-/** * 
+    // Esto es el livedata para popular
+    private MutableLiveData<List<MovieModel>> mMoviesPop;// Clase necesaria para el viewmodel
+    // Cremos un "Runable" para popular.
+    private RetrieveMoviesRunnablePop retrieveMoviesRunnablePop;
 
- * Refactored MovieApiClient with separated concerns. * This refactoring splits the original 257-line God Object into:
 
- *  * - MovieApiClient: Coordination and public API
-
- * This refactoring splits the original 257-line God Object into: * - MovieSearchHandler: Search operations
-
- * - MovieApiClient: Coordination and public API (this class) * - MoviePopularHandler: Popular movies operations
-
- * - MovieSearchHandler: Search operations logic */
-
- * - MoviePopularHandler: Popular movies logicpublic class MovieApiClient {
-
- * 
-
- * Benefits:    private static final int API_TIMEOUT_SECONDS = 30;
-
- * - Single Responsibility Principle (SRP) compliance    private static final String TAG = "MovieApiClient";
-
- * - Easier testing (each handler can be tested independently)
-
- * - Better code organization and maintainability    private final MutableLiveData<List<MovieModel>> searchMovies;
-
- * - Facilitates future extensions (e.g., MovieRecommendationHandler)    private final MutableLiveData<List<MovieModel>> popularMovies;
-
- */    
-
-public class MovieApiClient {    private static MovieApiClient instance;
-
-    
-
-    private static final int API_TIMEOUT_SECONDS = 30;    private MovieSearchHandler searchHandler;
-
-    private static final String TAG = "MovieApiClient";    private MoviePopularHandler popularHandler;
-
-
-
-    // LiveData for observers    /**
-
-    private final MutableLiveData<List<MovieModel>> searchMovies;     * Returns singleton instance of MovieApiClient.
-
-    private final MutableLiveData<List<MovieModel>> popularMovies;     * @return MovieApiClient instance
-
-         */
-
-    // Singleton instance    public static MovieApiClient getInstance() {
-
-    private static MovieApiClient instance;        if (instance == null) {
-
-                instance = new MovieApiClient();
-
-    // Specialized handlers        }
-
-    private MovieSearchHandler searchHandler;        return instance;
-
-    private MoviePopularHandler popularHandler;    }
-
-
-
-    /**    private MovieApiClient() {
-
-     * Returns singleton instance of MovieApiClient.        searchMovies = new MutableLiveData<>();
-
-     * @return MovieApiClient instance        popularMovies = new MutableLiveData<>();
-
-     */        searchHandler = new MovieSearchHandler(searchMovies);
-
-    public static MovieApiClient getInstance() {        popularHandler = new MoviePopularHandler(popularMovies);
-
-        if (instance == null) {    }
-
-            instance = new MovieApiClient();
-
-        }    /**
-
-        return instance;     * Gets LiveData for search results.
-
-    }     * @return LiveData containing list of movies from search
-
-     */
-
-    /**    public LiveData<List<MovieModel>> getMovies() {
-
-     * Private constructor for singleton pattern.        return searchMovies;
-
-     * Initializes LiveData and creates specialized handlers.    }
-
-     */
-
-    private MovieApiClient() {    /**
-
-        searchMovies = new MutableLiveData<>();     * Gets LiveData for popular movies.
-
-        popularMovies = new MutableLiveData<>();     * @return LiveData containing list of popular movies
-
-        searchHandler = new MovieSearchHandler(searchMovies);     */
-
-        popularHandler = new MoviePopularHandler(popularMovies);    public LiveData<List<MovieModel>> getPopularMovies() {
-
-    }        return popularMovies;
-
-    }
-
-    /**
-
-     * Gets LiveData for search results.    /**
-
-     * Observers will be notified when new search results are available.     * Searches movies by query with pagination.
-
-     *      * Automatically handles timeout and cancellation.
-
-     * @return LiveData containing list of movies from search     * 
-
-     */     * @param query Search query string
-
-    public LiveData<List<MovieModel>> getMovies() {     * @param pageNumber Page number for pagination
-
-        return searchMovies;     */
-
-    }    public void searchMoviesApi(String query, int pageNumber) {
-
-        searchHandler.cancel();
-
-    /**        searchHandler.search(query, pageNumber);
-
-     * Gets LiveData for popular movies.        scheduleTimeout(searchHandler.getFuture());
-
-     * Observers will be notified when new popular movies are available.    }
-
-     * 
-
-     * @return LiveData containing list of popular movies    /**
-
-     */     * Fetches popular movies with pagination.
-
-    public LiveData<List<MovieModel>> getMoviesPop() {     * Automatically handles timeout and cancellation.
-
-        return popularMovies;     * 
-
-    }     * @param pageNumber Page number for pagination
-
-     */
-
-    /**    public void searchPopularMovies(int pageNumber) {
-
-     * Searches movies by query with pagination.        popularHandler.cancel();
-
-     * Cancels any ongoing search before starting a new one.        popularHandler.search(pageNumber);
-
-     * Automatically handles timeout after 30 seconds.        scheduleTimeout(popularHandler.getFuture());
-
-     *     }
-
-     * @param query Search query string
-
-     * @param pageNumber Page number for pagination (1-based)    /**
-
-     */     * Schedules automatic timeout for API requests.
-
-    public void searchMoviesApi(String query, int pageNumber) {     * @param future Future to cancel on timeout
-
-        Log.d(TAG, "Searching movies: query='" + query + "', page=" + pageNumber);     */
-
-        searchHandler.cancel();    private void scheduleTimeout(final Future<?> future) {
-
-        searchHandler.search(query, pageNumber);        AppExecutors.getInstance().networkIO().schedule(new Runnable() {
-
-        scheduleTimeout(searchHandler.getFuture());            @Override
-
-    }            public void run() {
-
-                if (future != null && !future.isDone()) {
-
-    /**                    future.cancel(true);
-
-     * Fetches popular movies with pagination.                }
-
-     * Cancels any ongoing request before starting a new one.            }
-
-     * Automatically handles timeout after 30 seconds.        }, API_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-     *     }
-
-     * @param pageNumber Page number for pagination (1-based)}
-
-     */
-    public void searchMoviesPop(int pageNumber) {
-        Log.d(TAG, "Fetching popular movies: page=" + pageNumber);
-        popularHandler.cancel();
-        popularHandler.search(pageNumber);
-        scheduleTimeout(popularHandler.getFuture());
-    }
-
-    /**
-     * Schedules automatic timeout for API requests.
-     * If the request hasn't completed within API_TIMEOUT_SECONDS,
-     * it will be cancelled automatically.
-     * 
-     * @param future Future representing the ongoing API request
-     */
-    private void scheduleTimeout(final Future<?> future) {
-        if (future == null) {
-            Log.w(TAG, "Cannot schedule timeout: future is null");
-            return;
+    public static MovieApiClient getInstance(){
+        if(instancia==null){
+            instancia=new MovieApiClient();
         }
-        
+
+        return instancia;
+    }
+
+    private MovieApiClient(){
+        mMovies=new MutableLiveData<>();
+        mMoviesPop=new MutableLiveData<>();
+    }
+
+
+
+    public LiveData<List<MovieModel>> getMovies(){
+        return mMovies;
+    }
+
+    public LiveData<List<MovieModel>> getMoviesPop(){
+        return mMoviesPop;
+    }
+
+
+    // ESTE METODO SE LLAMARÁ ENTRE LAS DIFERENTES CLASES PARA CONSUMIR LA API.
+    public void searchMoviesApi(String query,int pageNumber){
+
+        if(retrieveMoviesRunnable != null){
+            retrieveMoviesRunnable = null;
+
+        }
+
+        retrieveMoviesRunnable = new RetrieveMoviesRunnable(query,pageNumber);
+
+
+
+        final Future myHandler=AppExecutors.getInstance().networkIO().submit(retrieveMoviesRunnable);
+
+
+                AppExecutors.getInstance().networkIO().schedule(new Runnable() {
+                    @Override
+                    public void run() { // Aquí cancelamos la solicitud a la api según el tiempo de espera
+                        myHandler.cancel(true); // Cancela el handler
+                    }
+                }, 30, TimeUnit.SECONDS); // Añadimos un timeout a la llamada de la api.
+
+    }
+
+    //consumir api para popular
+    public void searchMoviesPop(int pageNumber){
+
+        if(retrieveMoviesRunnablePop != null){
+            retrieveMoviesRunnablePop = null;
+
+        }
+
+        retrieveMoviesRunnablePop = new RetrieveMoviesRunnablePop(pageNumber);
+
+
+
+        final Future myHandler2=AppExecutors.getInstance().networkIO().submit(retrieveMoviesRunnablePop);
+
+
         AppExecutors.getInstance().networkIO().schedule(new Runnable() {
             @Override
-            public void run() {
-                if (!future.isDone()) {
-                    Log.w(TAG, "API request timed out after " + API_TIMEOUT_SECONDS + " seconds");
-                    future.cancel(true);
-                }
+            public void run() { // Aquí cancelamos la solicitud a la api según el tiempo de espera
+                myHandler2.cancel(true); // Cancela el handler
             }
-        }, API_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }, 30, TimeUnit.SECONDS); // Añadimos un timeout a la llamada de la api.
+
     }
+
+    // Obtención de datos de RestAPI con la siguiente clase ejecutable
+    private class RetrieveMoviesRunnable implements Runnable{
+
+        private String query;
+        private int pageNumber;
+        boolean cancelRequest;
+
+        // El constructor de la clase
+        public RetrieveMoviesRunnable(String query, int pageNumber){
+            this.query=query;
+            this.pageNumber=pageNumber;
+            cancelRequest=false;
+        }
+
+        @Override
+        public void run() { // El método que otiene los objetos de la respuesta
+            try{
+                Response response=getMovies(query,pageNumber).execute();
+                Log.v("El response","El code es: "+response.code());
+                if(cancelRequest){
+                    return;
+                }
+                if(response.code()==200){ // Si la consumición de la api ha ido bien, guardamos las películas en la lista.
+                    List<MovieModel> list=new ArrayList<>(((MovieSearchResponse)response.body()).getMovies());
+                    Log.v("Peliculas","Las peliculas son: "+response.code());
+                    if(pageNumber==1){
+                        // Tendremos que enviar los datos al "Live Data"
+
+                        mMovies.postValue(list); // Este método tardará un poco en publicar los datos en nuestro LiveData pero lo hará de manera asíncrona, por lo que no importa desde el hilo que se llame.
+                    } else{
+
+                        List<MovieModel> currentMovies = mMovies.getValue();
+                        currentMovies.addAll(list);
+                        mMovies.postValue(currentMovies);
+
+                    }
+
+
+                } else{ // Si no hay conexión o el response code no es 200 lanzamos error.
+
+                    String error =response.errorBody().string();
+                    Log.v("Tag","Error"+error);
+                    mMovies.postValue(null);
+
+                }
+
+
+
+            } catch (IOException e){
+                Log.e("MovieApiClient", "Error fetching movies: " + e.getMessage(), e);
+                mMovies.postValue(null);
+            }
+
+
+            if(cancelRequest){
+                Log.v("Tag","La búsqueda se ha cancelado");
+                return; // Si se ha cancelado la solicitud no hacer nada.
+            }
+        }
+
+
+        // Método para la búsqueda con query. Este método se encarga de llamar
+        // Similar a esta funcion:   Call<MovieSearchResponse> responseCall=movieApi.searchMovie(Credentials.API_KEY,"Jack Reacher",1);
+        // Pero permite parámetros personalizados
+        private Call<MovieSearchResponse> getMovies(String query, int pageNumber){
+            return MovieService.getMovieApi().searchMovie(Credentials.API_KEY,query,pageNumber);
+        }
+
+
+        private void cancelRequest(){
+            Log.v("Tag","La búsqueda se ha cancelado");
+            cancelRequest=true;
+        }
+    }
+
+    // Obtención de datos de RestAPI con la siguiente clase ejecutable para popular
+    private class RetrieveMoviesRunnablePop implements Runnable{
+
+        private int pageNumber;
+        boolean cancelRequest;
+
+        // El constructor de la clase
+        public RetrieveMoviesRunnablePop(int pageNumber){
+            this.pageNumber=pageNumber;
+            cancelRequest=false;
+        }
+
+        @Override
+        public void run() { // El método que otiene los objetos de la respuesta
+            try{
+                Response response2=getPop(pageNumber).execute();
+                Log.v("El response","El code es: "+response2.code());
+                if(cancelRequest){
+                    return;
+                }
+                if(response2.code()==200){ // Si la consumición de la api ha ido bien, guardamos las películas en la lista.
+                    List<MovieModel> list=new ArrayList<>(((MovieSearchResponse)response2.body()).getMovies());
+                    Log.v("Peliculas","Las peliculas son: "+response2.code());
+                    if(pageNumber==1){
+                        // Tendremos que enviar los datos al "Live Data"
+
+                        mMoviesPop.postValue(list); // Este método tardará un poco en publicar los datos en nuestro LiveData pero lo hará de manera asíncrona, por lo que no importa desde el hilo que se llame.
+                    } else{
+
+                        List<MovieModel> currentMovies = mMoviesPop.getValue();
+                        currentMovies.addAll(list);
+                        mMoviesPop.postValue(currentMovies);
+
+                    }
+
+
+                } else{ // Si no hay conexión o el response code no es 200 lanzamos error.
+
+                    String error =response2.errorBody().string();
+                    Log.v("Tag","Error"+error);
+                    mMoviesPop.postValue(null);
+
+                }
+
+
+
+            } catch (IOException e){
+                Log.e("MovieApiClient", "Error fetching popular movies: " + e.getMessage(), e);
+                mMoviesPop.postValue(null);
+            }
+
+
+            if(cancelRequest){
+                Log.v("Tag","La búsqueda se ha cancelado");
+                return; // Si se ha cancelado la solicitud no hacer nada.
+            }
+        }
+
+
+        // Método para la búsqueda con query. Este método se encarga de llamar
+        // Similar a esta funcion:   Call<MovieSearchResponse> responseCall=movieApi.searchMovie(Credentials.API_KEY,"Jack Reacher",1);
+        // Pero permite parámetros personalizados
+        private Call<MovieSearchResponse> getPop(int pageNumber){
+            return MovieService.getMovieApi().getPopular(Credentials.API_KEY,pageNumber);
+        }
+
+
+        private void cancelRequest(){
+            Log.v("Tag","La búsqueda se ha cancelado");
+            cancelRequest=true;
+        }
+    }
+
+
 }
