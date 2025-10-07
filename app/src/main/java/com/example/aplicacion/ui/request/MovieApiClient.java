@@ -154,7 +154,7 @@ public class MovieApiClient {
 
 
             } catch (IOException e){
-                e.printStackTrace();
+                Log.e("MovieApiClient", "Error fetching movies: " + e.getMessage(), e);
                 mMovies.postValue(null);
             }
 
@@ -170,7 +170,7 @@ public class MovieApiClient {
         // Similar a esta funcion:   Call<MovieSearchResponse> responseCall=movieApi.searchMovie(Credentials.API_KEY,"Jack Reacher",1);
         // Pero permite parámetros personalizados
         private Call<MovieSearchResponse> getMovies(String query, int pageNumber){
-            return Servicey.getMovieApi().searchMovie(Credentials.API_KEY,query,pageNumber);
+            return MovieService.getMovieApi().searchMovie(Credentials.API_KEY,query,pageNumber);
         }
 
 
@@ -227,7 +227,7 @@ public class MovieApiClient {
 
 
             } catch (IOException e){
-                e.printStackTrace();
+                Log.e("MovieApiClient", "Error fetching popular movies: " + e.getMessage(), e);
                 mMoviesPop.postValue(null);
             }
 
@@ -243,7 +243,7 @@ public class MovieApiClient {
         // Similar a esta funcion:   Call<MovieSearchResponse> responseCall=movieApi.searchMovie(Credentials.API_KEY,"Jack Reacher",1);
         // Pero permite parámetros personalizados
         private Call<MovieSearchResponse> getPop(int pageNumber){
-            return Servicey.getMovieApi().getPopular(Credentials.API_KEY,pageNumber);
+            return MovieService.getMovieApi().getPopular(Credentials.API_KEY,pageNumber);
         }
 
 

@@ -55,19 +55,7 @@ public class MainActivity extends AppCompatActivity {
         btnGoogle=findViewById(R.id.btnGoogle);
         btnFacebook=findViewById(R.id.btnFacebook);
         forgotPassword = findViewById(R.id.forgotPassword);
-/*
-        Button btn=findViewById(R.id.buttonTest);
 
-        btn.setOnClickListener(new View.OnClickListener(){
-
-            @Override
-            public void onClick(View view){
-                Log.i("1","Prueba API Pulsada");
-                GetRetrofitResponse();
-            }
-        });
-
- */
         createNewAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -107,61 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-/*
-            //// ESTO ESTA AQUI DE PRUEBA SOLO
-        btn=findViewById(R.id.buttonTest);
-
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i("Test","Prueba pulsacion API");
-                GetRetrofitResponse();
-            }
-        });
-
-        ////////////
-*/
-
-
     }
-
-    /////////// FUNCION SOLO DE PRUEBA
-/*
-    private void GetRetrofitResponse() {
-        MovieApi movieApi= Servicey.getMovieApi();
-        Call<MovieSearchResponse> responseCall=movieApi.searchMovie(Credentials.API_KEY,"Action",1);
-
-        responseCall.enqueue(new Callback<MovieSearchResponse>() {
-            @Override
-            public void onResponse(Call<MovieSearchResponse> call, Response<MovieSearchResponse> response) {
-                if(response.code()==200){
-                    Log.v("Tag","the response"+response.body().toString());
-                    List<MovieModel> movies=new ArrayList<>(response.body().getMovies());
-                    for (MovieModel movie : movies){
-                        Log.v("Tag","The release date: "+movie.getTitle());
-                    }
-                }
-                else{
-                    try{
-                        Log.v("Tag","Error"+response.errorBody().string());
-                    } catch (IOException e){
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MovieSearchResponse> call, Throwable t) {
-
-            }
-        });
-
-    }
-
-    ///////////////////////////////////
-*/
-
 
     private void perforLogin() {
         String email = inputEmail.getText().toString();

@@ -44,7 +44,7 @@ public class RegistrarseActivity extends AppCompatActivity {
         setContentView(R.layout.activity_registrarse);
         mAuth = FirebaseAuth.getInstance();
         mUser=mAuth.getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance("https://socialmovie-7c309-default-rtdb.europe-west1.firebasedatabase.app").getReference();
+        databaseReference = FirebaseDatabase.getInstance(BuildConfig.FIREBASE_DATABASE_URL).getReference();
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
