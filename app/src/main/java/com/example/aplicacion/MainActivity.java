@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.aplicacion.utils.ValidationUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -31,8 +32,6 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText inputEmail, inputPassword;
     private Button btnLogin;
-    private static final String VALID_EMAIL_REGEX = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
-            + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
     private ProgressDialog progressDialog;
     private TextView createNewAccount, forgotPassword;
     private ImageView btnGoogle;
@@ -101,17 +100,23 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Validates user credentials and performs login authentication.
      * Validates email format and password length before attempting sign-in.
+     * Uses ValidationUtils for consistent validation across the application.
      */
     private void performLogin() {
         String email = inputEmail.getText().toString();
         String password = inputPassword.getText().toString();
 
-        if (!email.matches(VALID_EMAIL_REGEX)) {
+        // Validate email using ValidationUtils
+        if (!ValidationUtils.isValidEmail(email)) {
             inputEmail.setError("Introduzca un email correcto");
             inputEmail.requestFocus();
-        } else if (password.isEmpty() || password.length() < 6) {
-            inputPassword.setError("Introduzca una contraseña válida");
-        } else {
+        } 
+        // Validate password using ValidationUtils
+        else if (!ValidationUtils.isValidPassword(password)) {
+            inputPassword.setError("La contraseña debe tener entre 6 y 20 caracteres");
+            inputPassword.requestFocus();
+        } 
+        else {
             progressDialog.setMessage("Login en progreso...");
             progressDialog.setTitle("Login");
             progressDialog.setCanceledOnTouchOutside(false);
