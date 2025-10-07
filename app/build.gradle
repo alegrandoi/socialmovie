@@ -92,3 +92,15 @@ dependencies {
 
 
 }
+
+// --- Seguridad: verificar existencia de google-services.json ---
+tasks.register("verifyGoogleServices") {
+    doLast {
+        def f = file("$projectDir/google-services.json")
+        if (!f.exists()) {
+            throw new GradleException("Falta app/google-services.json. Descárgalo desde Firebase y colócalo localmente (no se versiona).")
+        }
+    }
+}
+preBuild.dependsOn("verifyGoogleServices")
+// ---------------------------------------------------------------
