@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.aplicacion.utils.ValidationUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,13 +44,16 @@ public class ResetPasswordActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 emailForReset = editTextEmail.getText().toString();
-                if(!emailForReset.isEmpty()){
+                
+                // Validate email format using ValidationUtils
+                if (!ValidationUtils.isValidEmail(emailForReset)) {
+                    editTextEmail.setError("Introduzca un email correcto");
+                    editTextEmail.requestFocus();
+                } else {
                     progressDialog.setMessage("Espere un momento...");
                     progressDialog.setCanceledOnTouchOutside(false);
                     progressDialog.show();
                     resetPassword();
-                }else{
-                    Toast.makeText(ResetPasswordActivity.this,"Debe ingresar email",Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -65,6 +69,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     /**
      * Sends password reset email to the provided email address.
      * Uses Firebase Authentication to send the reset link.
+     * Email format is validated using ValidationUtils before calling this method.
      */
     private void resetPassword() {
         firebaseAuth.setLanguageCode("es");
