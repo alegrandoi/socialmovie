@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.aplicacion.utils.ValidationUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -37,8 +38,6 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView alreadyHaveAccount;
     private EditText inputEmail, inputPassword, inputConfirmPassword;
     private Button btnRegister;
-    private static final String VALID_EMAIL_REGEX = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
-            + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
     private ProgressDialog progressDialog;
 
 
@@ -81,21 +80,29 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Validates user input and performs authentication to create a new account.
      * Validates email format, password length, and password confirmation match.
+     * Uses ValidationUtils for consistent validation across the application.
      */
     private void performAuthentication() {
-        String email=inputEmail.getText().toString();
-        String password=inputPassword.getText().toString();
-        String confirmPassword=inputConfirmPassword.getText().toString();
+        String email = inputEmail.getText().toString();
+        String password = inputPassword.getText().toString();
+        String confirmPassword = inputConfirmPassword.getText().toString();
 
-
-        if(!email.matches(VALID_EMAIL_REGEX)){
+        // Validate email using ValidationUtils
+        if (!ValidationUtils.isValidEmail(email)) {
             inputEmail.setError("Introduzca un email correcto");
             inputEmail.requestFocus();
-        }else if(password.isEmpty() || password.length()<6){
-            inputPassword.setError("Introduzca una contraseña válida");
-        } else if(!password.equals(confirmPassword)){
-            inputConfirmPassword.setError("Las contraseñas no coincide.");
-        } else{
+        } 
+        // Validate password using ValidationUtils
+        else if (!ValidationUtils.isValidPassword(password)) {
+            inputPassword.setError("La contraseña debe tener entre 6 y 20 caracteres");
+            inputPassword.requestFocus();
+        } 
+        // Validate password match using ValidationUtils
+        else if (!ValidationUtils.passwordsMatch(password, confirmPassword)) {
+            inputConfirmPassword.setError("Las contraseñas no coinciden");
+            inputConfirmPassword.requestFocus();
+        } 
+        else {
             progressDialog.setMessage("Registro en progreso...");
             progressDialog.setTitle("Registro");
             progressDialog.setCanceledOnTouchOutside(false);
