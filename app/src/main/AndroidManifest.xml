@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Aplicacion">
         <activity
-            android:name=".RestablecerPass"
+            android:name=".ResetPasswordActivity"
             android:exported="false" />
         <activity
             android:name=".MovieDetails"
@@ -38,7 +38,7 @@
             android:exported="false" />
         <activity android:name=".FacebookAuthactivity" />
         <activity
-            android:name=".RegistrarseActivity"
+            android:name=".RegisterActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

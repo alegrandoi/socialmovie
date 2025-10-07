@@ -24,26 +24,30 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RegistrarseActivity extends AppCompatActivity {
+/**
+ * Activity for user registration with email and password.
+ * Handles new user account creation and stores user data in Firebase Realtime Database.
+ */
+public class RegisterActivity extends AppCompatActivity {
 
-    FirebaseAuth mAuth;
-    FirebaseUser mUser;
-    DatabaseReference databaseReference;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser currentUser;
+    private DatabaseReference databaseReference;
 
-    TextView alreadyHaveAccount;
-    EditText inputEmail,inputPassword,inputConfirmPassword;
-    Button btnRegister;
-    String validEmails="^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
+    private TextView alreadyHaveAccount;
+    private EditText inputEmail, inputPassword, inputConfirmPassword;
+    private Button btnRegister;
+    private static final String VALID_EMAIL_REGEX = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
             + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-    ProgressDialog progressDialog;
+    private ProgressDialog progressDialog;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_registrarse);
-        mAuth = FirebaseAuth.getInstance();
-        mUser=mAuth.getCurrentUser();
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
         databaseReference = FirebaseDatabase.getInstance(BuildConfig.FIREBASE_DATABASE_URL).getReference();
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -60,7 +64,7 @@ public class RegistrarseActivity extends AppCompatActivity {
         alreadyHaveAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(RegistrarseActivity.this,MainActivity.class));
+                startActivity(new Intent(RegisterActivity.this,MainActivity.class));
             }
         });
 
@@ -68,19 +72,23 @@ public class RegistrarseActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                PerforAuth();
+                performAuthentication();
             }
         });
 
     }
 
-    private void PerforAuth() {
+    /**
+     * Validates user input and performs authentication to create a new account.
+     * Validates email format, password length, and password confirmation match.
+     */
+    private void performAuthentication() {
         String email=inputEmail.getText().toString();
         String password=inputPassword.getText().toString();
         String confirmPassword=inputConfirmPassword.getText().toString();
 
 
-        if(!email.matches(validEmails)){
+        if(!email.matches(VALID_EMAIL_REGEX)){
             inputEmail.setError("Introduzca un email correcto");
             inputEmail.requestFocus();
         }else if(password.isEmpty() || password.length()<6){
@@ -93,7 +101,7 @@ public class RegistrarseActivity extends AppCompatActivity {
             progressDialog.setCanceledOnTouchOutside(false);
             progressDialog.show();
 
-            mAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            firebaseAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if(task.isSuccessful()){
@@ -103,7 +111,7 @@ public class RegistrarseActivity extends AppCompatActivity {
                         map.put("correo",email);
                         map.put("edad","edad");
 
-                        String id = mAuth.getCurrentUser().getUid();
+                        String id = firebaseAuth.getCurrentUser().getUid();
                         //databaseReference = FirebaseDatabase.getInstance().getReference();
                         databaseReference.child("Users").child(id).setValue(map).addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
@@ -111,10 +119,10 @@ public class RegistrarseActivity extends AppCompatActivity {
                                 if(task2.isSuccessful()){
                                     progressDialog.dismiss();
                                     sendUserToNextActivity();
-                                    Toast.makeText(RegistrarseActivity.this,"Registro completado",Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(RegisterActivity.this,"Registro completado",Toast.LENGTH_SHORT).show();
                                 }else{
                                     progressDialog.dismiss();
-                                    Toast.makeText(RegistrarseActivity.this,""+task.getException(),Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(RegisterActivity.this,""+task.getException(),Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });
@@ -123,7 +131,7 @@ public class RegistrarseActivity extends AppCompatActivity {
 
                     }else{
                         progressDialog.dismiss();
-                        Toast.makeText(RegistrarseActivity.this,""+task.getException(),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this,""+task.getException(),Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -134,7 +142,7 @@ public class RegistrarseActivity extends AppCompatActivity {
     }
 
     private void sendUserToNextActivity() {
-        Intent intent=new Intent(RegistrarseActivity.this,MainActivityBottomNav.class);
+        Intent intent=new Intent(RegisterActivity.this,MainActivityBottomNav.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }

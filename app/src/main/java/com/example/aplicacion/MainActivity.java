@@ -20,21 +20,23 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+/**
+ * Main activity handling user authentication.
+ * Supports email/password login, Google Sign-In, and Facebook authentication.
+ */
 public class MainActivity extends AppCompatActivity {
 
-    FirebaseAuth mAuth;
-    FirebaseUser mUser;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser currentUser;
 
-    EditText inputEmail, inputPassword;
-    Button btnLogin;
-    String validEmails = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
+    private EditText inputEmail, inputPassword;
+    private Button btnLogin;
+    private static final String VALID_EMAIL_REGEX = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
             + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-    ProgressDialog progressDialog;
-    TextView createNewAccount, forgotPassword;
-    ImageView btnGoogle;
-    ImageView btnFacebook;
-
-    Button btn;
+    private ProgressDialog progressDialog;
+    private TextView createNewAccount, forgotPassword;
+    private ImageView btnGoogle;
+    private ImageView btnFacebook;
 
 
     @Override
@@ -42,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mAuth = FirebaseAuth.getInstance();
-        mUser = mAuth.getCurrentUser();
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
 
         // Inicialización de widgets obtenidos por id
         createNewAccount = findViewById(R.id.createNewAccount);
@@ -59,22 +61,21 @@ public class MainActivity extends AppCompatActivity {
         createNewAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, RegistrarseActivity.class));
+                startActivity(new Intent(MainActivity.this, RegisterActivity.class));
             }
         });
 
         forgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, RestablecerPass.class));
+                startActivity(new Intent(MainActivity.this, ResetPasswordActivity.class));
             }
         });
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                perforLogin();
-
+                performLogin();
             }
         });
 
@@ -97,12 +98,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void perforLogin() {
+    /**
+     * Validates user credentials and performs login authentication.
+     * Validates email format and password length before attempting sign-in.
+     */
+    private void performLogin() {
         String email = inputEmail.getText().toString();
         String password = inputPassword.getText().toString();
 
-
-        if (!email.matches(validEmails)) {
+        if (!email.matches(VALID_EMAIL_REGEX)) {
             inputEmail.setError("Introduzca un email correcto");
             inputEmail.requestFocus();
         } else if (password.isEmpty() || password.length() < 6) {
@@ -113,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.setCanceledOnTouchOutside(false);
             progressDialog.show();
 
-            mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()) {
