@@ -41,11 +41,11 @@ public class MovieRecyclerViewBuscar extends BaseMovieAdapter {
         if(viewType == DISPLAY_SEARCH){
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_list_item_buscar
                     ,parent,false);
-            return new MovieViewHolder(view,onMovieListenerBuscar);
+            return new MovieViewHolderBuscar(view, onMovieListener);
         }else{
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.popular_movies_layout
                     ,parent,false);
-            return new Popular_View_Holder(view,onMovieListenerBuscar);
+            return new Popular_View_Holder(view, onMovieListener);
         }
     }
 

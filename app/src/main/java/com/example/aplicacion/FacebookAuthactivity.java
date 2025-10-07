@@ -19,17 +19,20 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 
 public class FacebookAuthactivity extends MainActivity {
     CallbackManager callbackManager;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mAuth = FirebaseAuth.getInstance();
         callbackManager = CallbackManager.Factory.create();
         LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile"));
         LoginManager.getInstance().registerCallback(callbackManager,

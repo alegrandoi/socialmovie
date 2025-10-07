@@ -27,8 +27,8 @@ import com.google.firebase.auth.FirebaseUser;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private FirebaseAuth firebaseAuth;
-    private FirebaseUser currentUser;
+    protected FirebaseAuth firebaseAuth;
+    protected FirebaseUser currentUser;
 
     private EditText inputEmail, inputPassword;
     private Button btnLogin;
