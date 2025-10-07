@@ -94,6 +94,8 @@ dependencies {
 }
 
 // --- Seguridad: verificar existencia de google-services.json ---
+import org.gradle.api.GradleException
+
 tasks.register("verifyGoogleServices") {
     doLast {
         def f = file("$projectDir/google-services.json")
