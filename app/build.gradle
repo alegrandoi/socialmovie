@@ -50,8 +50,8 @@ android {
             // Enable test coverage
             testCoverageEnabled true
             
-            // Application ID suffix for debug
-            applicationIdSuffix ".debug"
+            // Removed applicationIdSuffix to match google-services.json package name
+            // Google Services requires exact package name match
             versionNameSuffix "-debug"
         }
     }
